@@ -35,7 +35,8 @@ public class MainActivity extends Activity implements Serializable {
     private SendClient sendClient;
     private boolean isServiceBound = false;
     private MqttAndroidClient client;
-    MyBroadcast myBroadcast;
+    private BroadcastReceiver mMessageReceiver;
+    //MyBroadcast myBroadcast;
     //private BroadcastReceiver mMessageReceiver;
 
     // private ServiceConnection serviceConnection;
@@ -53,9 +54,16 @@ public class MainActivity extends Activity implements Serializable {
 
         //connectService();
         //myService = new MyService(this, this);
-        Intent service_intent = new Intent(MainActivity.this, MyService.class);
-        bindService(service_intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        startService(service_intent);
+
+
+
+//         sendClient = ((SendClient) getApplicationContext());
+//        SharedPreferences appSharedPrefs = PreferenceManager
+//                .getDefaultSharedPreferences(this.getApplicationContext());
+//        Gson gson = new Gson();
+//        String json = appSharedPrefs.getString("MyObject", "");
+//        sendClient = gson.fromJson(json, SendClient.class);
+//
 
 
 //        myService.getCallback(this);
@@ -68,6 +76,7 @@ public class MainActivity extends Activity implements Serializable {
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
+                sendClient.getClient().setCallback(null);
                 Intent i = new Intent(MainActivity.this, Main2Activity.class);
                 //client.setCallback(null);
                 //i.putExtra("data", (Serializable) sendClient);
@@ -88,44 +97,6 @@ public class MainActivity extends Activity implements Serializable {
     }
 
 
-//    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(final Context context, final Intent intent) {
-//
-//
-//            sendClient = (SendClient) intent.getSerializableExtra("data");
-//            client = sendClient.getClient();
-//
-//            sendClient.getClient().setCallback(new MqttCallbackExtended() {
-//                @Override
-//                public void connectComplete(final boolean reconnect, final String serverURI) {
-//                    Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
-//
-//                    setSub("abcd", sendClient.getClient());
-//                }
-//
-//                @Override
-//                public void connectionLost(final Throwable cause) {
-//
-//                    Log.i("service1", "connection lost");
-//                }
-//
-//                @Override
-//                public void messageArrived(final String topic, final MqttMessage message) throws Exception {
-//                    Log.i("message", new String(message.getPayload()));
-//
-//                }
-//
-//                @Override
-//                public void deliveryComplete(final IMqttDeliveryToken token) {
-//
-//                }
-//            });
-//
-//
-//        }
-//    };
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -135,7 +106,30 @@ public class MainActivity extends Activity implements Serializable {
     @Override
     protected void onPause() {
         super.onPause();
+        Log.i("pause", "onPaused triggerd");
         //this.unregisterReceiver(mMessageReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+
+        broadcastClient();
+
+//        IntentFilter intentFilter = new IntentFilter("com.example.broadcast");
+//        myBroadcast = new MyBroadcast();
+//        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcast, intentFilter);
+
+    }
+
+    private void broadcastClient() {
+        //broadcastReceiver = new MyBroadcastReceiver();
+        //broadcast client object on subject = mqttclient;
+        Intent i = new Intent("broadcast2");
+        SendClient sendClient = new SendClient();
+        sendClient.setClient(sendClient.getClient());
+        i.putExtra("data2", sendClient);
+//        i.addCategory(Intent.CATEGORY_DEFAULT);
+        //i.setAction("com.example.pass");
+        //i.setAction("com.example.Pass");
+        //make use of local broadcast manager to limit the broadcast to this app only;
+        LocalBroadcastManager.getInstance(this).sendBroadcast(i);
     }
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -161,49 +155,56 @@ public class MainActivity extends Activity implements Serializable {
         super.onResume();
 
 
-        IntentFilter intentFilter = new IntentFilter("com.example.broadcast");
-        myBroadcast = new MyBroadcast();
-        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcast, intentFilter);
+        IntentFilter intentFilter = new IntentFilter("broadcast");
+        //myBroadcast = new MyBroadcast();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, intentFilter);
 
-        //this.registerReceiver(mMessageReceiver, intentFilter);
+        Intent service_intent = new Intent(MainActivity.this, MyService.class);
+        bindService(service_intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        startService(service_intent);
+
+        mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(final Context context, final Intent intent) {
+
+
+                sendClient = (SendClient) intent.getSerializableExtra("data");
+                client = sendClient.getClient();
+                setSub("abcd", sendClient.getClient());
+
+                sendClient.getClient().setCallback(new MqttCallbackExtended() {
+                    @Override
+                    public void connectComplete(final boolean reconnect, final String serverURI) {
+                        Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
+
+                        //setSub("abcd", sendClient.getClient());
+                    }
+
+                    @Override
+                    public void connectionLost(final Throwable cause) {
+
+                        Log.i("service1", "connection lost");
+                    }
+
+                    @Override
+                    public void messageArrived(final String topic, final MqttMessage message) throws Exception {
+                        Log.i("message", new String(message.getPayload()));
+
+                    }
+
+                    @Override
+                    public void deliveryComplete(final IMqttDeliveryToken token) {
+
+                    }
+                });
+
+
+            }
+        };
+
+       // this.registerReceiver(mMessageReceiver, intentFilter);
     }
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(final Context context, final Intent intent) {
-
-            sendClient = (SendClient) intent.getSerializableExtra("data");
-            client = (MqttAndroidClient) sendClient.getClient();
-
-            client.setCallback(new MqttCallbackExtended() {
-                @Override
-                public void connectComplete(final boolean reconnect, final String serverURI) {
-                    Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
-
-                    setSub("abcd", client);
-                }
-
-                @Override
-                public void connectionLost(final Throwable cause) {
-
-                    Log.i("service1", "connection lost");
-                }
-
-                @Override
-                public void messageArrived(final String topic, final MqttMessage message) throws Exception {
-                    Log.i("message", new String(message.getPayload()));
-
-                }
-
-                @Override
-                public void deliveryComplete(final IMqttDeliveryToken token) {
-
-                }
-            });
-
-
-        }
-    };
 
     @Override
     protected void onStop() {
@@ -213,7 +214,7 @@ public class MainActivity extends Activity implements Serializable {
             isServiceBound = false;
         }
 
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcast);
+
         //this.unregisterReceiver(mMessageReceiver);
 
     }

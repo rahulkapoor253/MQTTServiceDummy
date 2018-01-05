@@ -90,6 +90,14 @@ public class MyService extends Service implements Serializable {
 //        mCallback.getReference(client_1);
 //        Log.i("callback", mCallback.toString());
 
+//        SendClient sendClient = new SendClient();
+//        sendClient.setClient(client_1);
+
+//        SendClient sendClient = ((SendClient) getApplicationContext());
+//        sendClient.setClient(client_1);
+//        Log.i("client", client_1.getClientId());
+
+
         broadcastClient();
 
 
@@ -100,12 +108,12 @@ public class MyService extends Service implements Serializable {
     private void broadcastClient() {
         //broadcastReceiver = new MyBroadcastReceiver();
         //broadcast client object on subject = mqttclient;
-        Intent i = new Intent();
+        Intent i = new Intent("broadcast");
         SendClient sendClient = new SendClient();
         sendClient.setClient(client_1);
         i.putExtra("data", sendClient);
 //        i.addCategory(Intent.CATEGORY_DEFAULT);
-        i.setAction("com.example.broadcast");
+        //i.setAction("com.example.Pass");
         //make use of local broadcast manager to limit the broadcast to this app only;
         LocalBroadcastManager.getInstance(this).sendBroadcast(i);
     }

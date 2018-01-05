@@ -31,12 +31,9 @@
         <service android:name=".service.MyService"/>
 
         //we make export attr = false so that it cant be triggered from any other app;
-        <receiver android:name=".MyBroadcast">
-            <intent-filter>
-                <action android:name="com.example.Broadcast">
-                </action>
-            </intent-filter>
-        </receiver>
+
+
+
         <activity android:name=".Main2Activity">
         </activity>
     </application>

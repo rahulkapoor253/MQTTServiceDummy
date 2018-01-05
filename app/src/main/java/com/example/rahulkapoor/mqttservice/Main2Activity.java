@@ -32,7 +32,8 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
     private boolean isServiceBound = false;
     private SendClient sendClient;
     private MqttAndroidClient client;
-    private MyBroadcast myBroadcast;
+    //private Broadcast2 myBroadcast2;
+    private BroadcastReceiver mMessageReceiver;
 
 
     @Override
@@ -51,54 +52,84 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter intentFilter = new IntentFilter("com.example.broadcast");
+        // IntentFilter intentFilter = new IntentFilter("com.example.pass");
+        // IntentFilter intentFilter = new IntentFilter("com.example.Broadcast");
+        //myBroadcast2 = new Broadcast2();
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcast, intentFilter);
+        IntentFilter intentFilter = new IntentFilter("broadcast2");
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, intentFilter);
+
+        mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(final Context context, final Intent intent) {
+
+
+                sendClient = (SendClient) intent.getSerializableExtra("data2");
+
+                setSub("abc", client);
+
+                client.setCallback(new MqttCallbackExtended() {
+                    @Override
+                    public void connectComplete(final boolean reconnect, final String serverURI) {
+                        Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
+
+                        //setSub("abcd", client);
+                    }
+
+                    @Override
+                    public void connectionLost(final Throwable cause) {
+
+                        Log.i("service1", "connection lost");
+                    }
+
+                    @Override
+                    public void messageArrived(final String topic, final MqttMessage message) throws Exception {
+                        Log.i("message", new String(message.getPayload()));
+
+                    }
+
+                    @Override
+                    public void deliveryComplete(final IMqttDeliveryToken token) {
+
+                    }
+                });
+
+
+            }
+
+        };
+
+
+//        SendClient sendClient = ((SendClient) getApplicationContext());
+//        sendClient.getClient().setCallback(new MqttCallbackExtended() {
+//            @Override
+//            public void connectComplete(final boolean reconnect, final String serverURI) {
+//                Log.i("hie", "");
+//            }
+//
+//            @Override
+//            public void connectionLost(final Throwable cause) {
+//
+//            }
+//
+//            @Override
+//            public void messageArrived(final String topic, final MqttMessage message) throws Exception {
+//
+//            }
+//
+//            @Override
+//            public void deliveryComplete(final IMqttDeliveryToken token) {
+//
+//            }
+//        });
+
+//        myBroadcast = new MyBroadcast();
+//        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcast, intentFilter);
 
         //this.registerReceiver(mMessageReceiver, intentFilter);
 
 
     }
-
-
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(final Context context, final Intent intent) {
-
-
-            sendClient = (SendClient) intent.getSerializableExtra("data");
-
-            setSub("abc", client);
-
-            client.setCallback(new MqttCallbackExtended() {
-                @Override
-                public void connectComplete(final boolean reconnect, final String serverURI) {
-                    Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
-
-                    setSub("abcd", client);
-                }
-
-                @Override
-                public void connectionLost(final Throwable cause) {
-
-                    Log.i("service1", "connection lost");
-                }
-
-                @Override
-                public void messageArrived(final String topic, final MqttMessage message) throws Exception {
-                    Log.i("message", new String(message.getPayload()));
-
-                }
-
-                @Override
-                public void deliveryComplete(final IMqttDeliveryToken token) {
-
-                }
-            });
-
-
-        }
-    };
 
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -122,13 +153,14 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
     @Override
     protected void onPause() {
         super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
         //this.unregisterReceiver(mMessageReceiver);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcast);
+
         //unregisterReceiver(mMessageReceiver);
 
     }
