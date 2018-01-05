@@ -2,6 +2,7 @@ package com.example.rahulkapoor.mqttservice.service;
 
 import android.app.AlertDialog;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -37,6 +38,8 @@ public class MyService extends Service implements Serializable {
     private IBinder binder = new MyBinder();
     private Callback mCallback;
     private Context mContext;
+    private BroadcastReceiver broadcastReceiver;
+    private LocalBroadcastManager localBroadcastManager;
 
 //    public MyService() {
 //
@@ -66,6 +69,7 @@ public class MyService extends Service implements Serializable {
         super.onRebind(intent);
     }
 
+
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
 
@@ -94,10 +98,15 @@ public class MyService extends Service implements Serializable {
     }
 
     private void broadcastClient() {
-        Intent i = new Intent("mqttClient");
+        //broadcastReceiver = new MyBroadcastReceiver();
+        //broadcast client object on subject = mqttclient;
+        Intent i = new Intent();
         SendClient sendClient = new SendClient();
         sendClient.setClient(client_1);
         i.putExtra("data", sendClient);
+//        i.addCategory(Intent.CATEGORY_DEFAULT);
+        i.setAction("com.example.broadcast");
+        //make use of local broadcast manager to limit the broadcast to this app only;
         LocalBroadcastManager.getInstance(this).sendBroadcast(i);
     }
 
@@ -116,7 +125,7 @@ public class MyService extends Service implements Serializable {
                 public void onFailure(final IMqttToken asyncActionToken, final Throwable exception) {
                     Toast.makeText(MyService.this, "Failure", Toast.LENGTH_LONG).show();
                     Log.i("service", "failure");
-                    callAlertDialog();
+                    //callAlertDialog();
                 }
 
 

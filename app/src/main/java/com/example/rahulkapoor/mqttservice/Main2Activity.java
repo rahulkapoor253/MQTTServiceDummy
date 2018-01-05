@@ -1,11 +1,14 @@
 package com.example.rahulkapoor.mqttservice;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
@@ -28,6 +31,8 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
     //private MqttAndroidClient client;
     private boolean isServiceBound = false;
     private SendClient sendClient;
+    private MqttAndroidClient client;
+    private MyBroadcast myBroadcast;
 
 
     @Override
@@ -35,53 +40,66 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
 
-        Bundle bundle = this.getIntent().getExtras();
-        if (bundle != null) {
-            sendClient = (SendClient) bundle.getSerializable("classobj");
-        }
-
-
         Intent service_intent = new Intent(Main2Activity.this, MyService.class);
         bindService(service_intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
 
-        setSub("abc", sendClient.getClient());
+        //setCallbacks(sendClient.getClient());
 
-        setCallbacks(sendClient.getClient());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter intentFilter = new IntentFilter("com.example.broadcast");
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcast, intentFilter);
+
+        //this.registerReceiver(mMessageReceiver, intentFilter);
+
 
     }
 
 
-    private void setCallbacks(final MqttAndroidClient client) {
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
 
 
-        client.setCallback(new MqttCallbackExtended() {
-            @Override
-            public void connectComplete(final boolean reconnect, final String serverURI) {
+            sendClient = (SendClient) intent.getSerializableExtra("data");
 
-            }
+            setSub("abc", client);
 
-            @Override
-            public void connectionLost(final Throwable cause) {
-                Log.i("service2", "lost connection");
-            }
+            client.setCallback(new MqttCallbackExtended() {
+                @Override
+                public void connectComplete(final boolean reconnect, final String serverURI) {
+                    Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
 
-            @Override
-            public void messageArrived(final String topic, final MqttMessage message) throws Exception {
-                Toast.makeText(myService, new String(message.getPayload()), Toast.LENGTH_SHORT).show();
-                Log.i("service2", new String(message.getPayload()));
+                    setSub("abcd", client);
+                }
+
+                @Override
+                public void connectionLost(final Throwable cause) {
+
+                    Log.i("service1", "connection lost");
+                }
+
+                @Override
+                public void messageArrived(final String topic, final MqttMessage message) throws Exception {
+                    Log.i("message", new String(message.getPayload()));
+
+                }
+
+                @Override
+                public void deliveryComplete(final IMqttDeliveryToken token) {
+
+                }
+            });
 
 
-            }
+        }
+    };
 
-            @Override
-            public void deliveryComplete(final IMqttDeliveryToken token) {
-
-            }
-        });
-
-
-    }
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -102,8 +120,16 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
     };
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        //this.unregisterReceiver(mMessageReceiver);
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcast);
+        //unregisterReceiver(mMessageReceiver);
 
     }
 
@@ -114,15 +140,6 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
         } catch (MqttException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        //Intent intent = new Intent(this, MyService.class);
-        //startService(intent);
-        //getApplicationContext().bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
 
