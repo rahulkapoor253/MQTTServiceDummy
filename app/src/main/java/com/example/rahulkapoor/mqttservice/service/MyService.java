@@ -77,7 +77,7 @@ public class MyService extends Service implements Serializable {
 //        MqttConnection.getInstance(getApplicationContext()).doConnect();
 //        MqttConnection.getInstance(getApplicationContext()).setOptions();
 //        MqttConnection.getInstance(getApplicationContext()).sync();
-        client_1 = new MqttAndroidClient(getApplicationContext(), ServerConstants.MQTTHOST_LOCAL, clientId);
+        client_1 = new MqttAndroidClient(getApplicationContext(), ServerConstants.MQTTHOST_CLOUD, clientId);
         connectOptions = new MqttConnectOptions();
         connectOptions.setUserName(ServerConstants.USERNAME);
         connectOptions.setPassword(ServerConstants.PASSWORD.toCharArray());

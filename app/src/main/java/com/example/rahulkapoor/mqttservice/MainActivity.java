@@ -56,7 +56,6 @@ public class MainActivity extends Activity implements Serializable {
         //myService = new MyService(this, this);
 
 
-
 //         sendClient = ((SendClient) getApplicationContext());
 //        SharedPreferences appSharedPrefs = PreferenceManager
 //                .getDefaultSharedPreferences(this.getApplicationContext());
@@ -90,6 +89,9 @@ public class MainActivity extends Activity implements Serializable {
 
     private void setSub(String topic, MqttAndroidClient client) {
         try {
+            Log.i("sub", topic + "");
+            Log.i("client", client.getClientId() + "");
+            //to subscribe after we connect to the server;
             client.subscribe(topic, 1);
         } catch (MqttException e) {
             e.printStackTrace();
@@ -157,7 +159,7 @@ public class MainActivity extends Activity implements Serializable {
 
         IntentFilter intentFilter = new IntentFilter("broadcast");
         //myBroadcast = new MyBroadcast();
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, intentFilter);
+
 
         Intent service_intent = new Intent(MainActivity.this, MyService.class);
         bindService(service_intent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -170,39 +172,45 @@ public class MainActivity extends Activity implements Serializable {
 
                 sendClient = (SendClient) intent.getSerializableExtra("data");
                 client = sendClient.getClient();
-                setSub("abcd", sendClient.getClient());
+                //if the client is connected then only we can set callbacks and subscribe;
+                if (client.isConnected()) {
+                    setSub("abcd", sendClient.getClient());
 
-                sendClient.getClient().setCallback(new MqttCallbackExtended() {
-                    @Override
-                    public void connectComplete(final boolean reconnect, final String serverURI) {
-                        Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
+                    sendClient.getClient().setCallback(new MqttCallbackExtended() {
+                        @Override
+                        public void connectComplete(final boolean reconnect, final String serverURI) {
+                            Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
+                            Log.i("service1", "connectComplete");
+                            //setSub("abcd", sendClient.getClient());
+                        }
 
-                        //setSub("abcd", sendClient.getClient());
-                    }
+                        @Override
+                        public void connectionLost(final Throwable cause) {
 
-                    @Override
-                    public void connectionLost(final Throwable cause) {
+                            Log.i("service1", "connection lost");
+                        }
 
-                        Log.i("service1", "connection lost");
-                    }
+                        @Override
+                        public void messageArrived(final String topic, final MqttMessage message) throws Exception {
+                            Log.i("message", new String(message.getPayload()));
 
-                    @Override
-                    public void messageArrived(final String topic, final MqttMessage message) throws Exception {
-                        Log.i("message", new String(message.getPayload()));
+                        }
 
-                    }
+                        @Override
+                        public void deliveryComplete(final IMqttDeliveryToken token) {
 
-                    @Override
-                    public void deliveryComplete(final IMqttDeliveryToken token) {
+                        }
+                    });
 
-                    }
-                });
 
+                }
 
             }
         };
 
-       // this.registerReceiver(mMessageReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, intentFilter);
+
+        // this.registerReceiver(mMessageReceiver, intentFilter);
     }
 
 

@@ -32,8 +32,6 @@
 
         //we make export attr = false so that it cant be triggered from any other app;
 
-
-
         <activity android:name=".Main2Activity">
         </activity>
     </application>

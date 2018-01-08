@@ -41,9 +41,6 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
 
-        Intent service_intent = new Intent(Main2Activity.this, MyService.class);
-        bindService(service_intent, serviceConnection, Context.BIND_AUTO_CREATE);
-
 
         //setCallbacks(sendClient.getClient());
 
@@ -56,8 +53,11 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
         // IntentFilter intentFilter = new IntentFilter("com.example.Broadcast");
         //myBroadcast2 = new Broadcast2();
 
-        IntentFilter intentFilter = new IntentFilter("broadcast2");
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, intentFilter);
+         final IntentFilter intentFilter = new IntentFilter("broadcast2");
+
+//binding the activity to the service class;
+        Intent service_intent = new Intent(Main2Activity.this, MyService.class);
+        bindService(service_intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         mMessageReceiver = new BroadcastReceiver() {
             @Override
@@ -93,6 +93,8 @@ public class Main2Activity extends AppCompatActivity implements Serializable {
 
                     }
                 });
+
+                LocalBroadcastManager.getInstance(Main2Activity.this).registerReceiver(mMessageReceiver, intentFilter);
 
 
             }
