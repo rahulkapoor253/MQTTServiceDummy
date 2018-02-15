@@ -105,18 +105,22 @@ public class MyService extends Service implements Serializable {
 
     }
 
-    private void broadcastClient() {
+    public void broadcastClient() {
         //broadcastReceiver = new MyBroadcastReceiver();
         //broadcast client object on subject = mqttclient;
         Intent i = new Intent("broadcast");
         SendClient sendClient = new SendClient();
         sendClient.setClient(client_1);
+        //sendClient.setClient(client_1);
+        //i.addFlags(i.FLAG_ACTIVITY_NEW_TASK);
         i.putExtra("data", sendClient);
 //        i.addCategory(Intent.CATEGORY_DEFAULT);
         //i.setAction("com.example.Pass");
         //make use of local broadcast manager to limit the broadcast to this app only;
         LocalBroadcastManager.getInstance(this).sendBroadcast(i);
     }
+
+
 
 
     private void mqttConnect() {

@@ -10,16 +10,17 @@ import java.io.Serializable;
 
 public class SendClient implements Serializable {
 
+    private MqttAndroidClient mqttAndroidClient;
 
-    private MqttAndroidClient mClient;
+    //private MqttAndroidClient mClient;
+
 
     public void setClient(final MqttAndroidClient client) {
-        this.mClient = client;
+        this.mqttAndroidClient = client;
     }
 
     public MqttAndroidClient getClient() {
-        return mClient;
+        return mqttAndroidClient;
     }
-
 
 }

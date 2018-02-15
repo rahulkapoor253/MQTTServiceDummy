@@ -75,8 +75,11 @@ public class MainActivity extends Activity implements Serializable {
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
+                broadcastClient();
                 sendClient.getClient().setCallback(null);
                 Intent i = new Intent(MainActivity.this, Main2Activity.class);
+//                SendClient client1 = new SendClient(client);
+//                i.putExtra("obj", client1);
                 //client.setCallback(null);
                 //i.putExtra("data", (Serializable) sendClient);
                 startActivity(i);
@@ -109,10 +112,16 @@ public class MainActivity extends Activity implements Serializable {
     protected void onPause() {
         super.onPause();
         Log.i("pause", "onPaused triggerd");
+
+        if (isServiceBound) {
+            unbindService(serviceConnection);
+            Log.i("service", "service unbinded");
+            isServiceBound = false;
+        }
         //this.unregisterReceiver(mMessageReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
 
-        broadcastClient();
+        //broadcastClient();
 
 //        IntentFilter intentFilter = new IntentFilter("com.example.broadcast");
 //        myBroadcast = new MyBroadcast();
@@ -124,8 +133,9 @@ public class MainActivity extends Activity implements Serializable {
         //broadcastReceiver = new MyBroadcastReceiver();
         //broadcast client object on subject = mqttclient;
         Intent i = new Intent("broadcast2");
-        SendClient sendClient = new SendClient();
-        sendClient.setClient(sendClient.getClient());
+//        SendClient sendClient = new SendClient();
+//        sendClient.setClient(sendClient.getClient());
+        i.addFlags(i.FLAG_ACTIVITY_NEW_TASK);
         i.putExtra("data2", sendClient);
 //        i.addCategory(Intent.CATEGORY_DEFAULT);
         //i.setAction("com.example.pass");
@@ -152,6 +162,7 @@ public class MainActivity extends Activity implements Serializable {
         }
     };
 
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -161,54 +172,57 @@ public class MainActivity extends Activity implements Serializable {
         //myBroadcast = new MyBroadcast();
 
 
-        Intent service_intent = new Intent(MainActivity.this, MyService.class);
+        final Intent service_intent = new Intent(MainActivity.this, MyService.class);
         bindService(service_intent, serviceConnection, Context.BIND_AUTO_CREATE);
         startService(service_intent);
+
 
         mMessageReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(final Context context, final Intent intent) {
 
 
-                sendClient = (SendClient) intent.getSerializableExtra("data");
+//                Bundle extras = getIntent().getExtras();
+
+                sendClient = (SendClient) getIntent().getSerializableExtra("data");
                 client = sendClient.getClient();
+
                 //if the client is connected then only we can set callbacks and subscribe;
-                if (client.isConnected()) {
-                    setSub("abcd", sendClient.getClient());
+                //setSub("abcd", sendClient.getClient());
 
-                    sendClient.getClient().setCallback(new MqttCallbackExtended() {
-                        @Override
-                        public void connectComplete(final boolean reconnect, final String serverURI) {
-                            Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
-                            Log.i("service1", "connectComplete");
-                            //setSub("abcd", sendClient.getClient());
-                        }
+                sendClient.getClient().setCallback(new MqttCallbackExtended() {
+                    @Override
+                    public void connectComplete(final boolean reconnect, final String serverURI) {
+                        Toast.makeText(context, "connectComplete", Toast.LENGTH_LONG).show();
+                        Log.i("service1", "connectComplete");
+                        //setSub("abcd", sendClient.getClient());
+                    }
 
-                        @Override
-                        public void connectionLost(final Throwable cause) {
+                    @Override
+                    public void connectionLost(final Throwable cause) {
 
-                            Log.i("service1", "connection lost");
-                        }
+                        Log.i("service1", "connection lost");
+                    }
 
-                        @Override
-                        public void messageArrived(final String topic, final MqttMessage message) throws Exception {
-                            Log.i("message", new String(message.getPayload()));
+                    @Override
+                    public void messageArrived(final String topic, final MqttMessage message) throws Exception {
+                        Log.i("message", new String(message.getPayload()));
+                        Log.i("service1", "hey");
 
-                        }
+                    }
 
-                        @Override
-                        public void deliveryComplete(final IMqttDeliveryToken token) {
+                    @Override
+                    public void deliveryComplete(final IMqttDeliveryToken token) {
 
-                        }
-                    });
+                    }
+                });
 
-
-                }
 
             }
         };
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, intentFilter);
+
 
         // this.registerReceiver(mMessageReceiver, intentFilter);
     }
@@ -217,10 +231,7 @@ public class MainActivity extends Activity implements Serializable {
     @Override
     protected void onStop() {
         super.onStop();
-        if (isServiceBound) {
-            unbindService(serviceConnection);
-            isServiceBound = false;
-        }
+        Log.i("service", "onstop triggered");
 
 
         //this.unregisterReceiver(mMessageReceiver);
